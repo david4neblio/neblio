@@ -149,7 +149,7 @@ TEST(script_tests, script_valid)
         for (unsigned int i = 0; i < tx.vin.size(); i++) {
           tx.vin[i].nSequence = 0; //Must also be not equal to SEQUENCE_FINAL to work
         }
-        cout<<"Transaction Inputs: "+tx.vin.size();
+        cout<<"Transaction Inputs: "<<tx.vin.size();
         EXPECT_TRUE(VerifyScript(scriptSig, scriptPubKey, tx, 0, true, true, SIGHASH_NONE)) << strTest;
     }
 }
