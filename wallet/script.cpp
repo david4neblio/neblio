@@ -484,7 +484,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                 // Control
                 //
                 case OP_NOP:
-                case OP_NOP1: case OP_NOP2: case OP_NOP3: case OP_NOP4: case OP_NOP5:
+                case OP_NOP1: case OP_NOP4: case OP_NOP5:
                 case OP_NOP6: case OP_NOP7: case OP_NOP8: case OP_NOP9: case OP_NOP10:
                 break;
 
@@ -595,7 +595,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                     // To provide for future soft-fork extensibility, if the
                     // operand has the disabled lock-time flag set,
                     // CHECKSEQUENCEVERIFY behaves as a NOP.
-                    if ((nSequence.getint32() & SEQUENCE_LOCKTIME_DISABLE_FLAG) != 0)
+                    if ((nSequence.getint() & SEQUENCE_LOCKTIME_DISABLE_FLAG) != 0)
                         break;
 
                     // Compare the specified sequence number with the input.
