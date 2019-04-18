@@ -146,10 +146,8 @@ TEST(script_tests, script_valid)
 
         CTransaction tx;
         tx.nTime = CHECKLOCKTIME_SEQUENCE_VERIFY_SWITCH_TIME; //Force this transaction to use the LockTime verify
-        for (unsigned int i = 0; i < tx.vin.size(); i++) {
-          tx.vin[i].nSequence = 0; //Must also be not equal to SEQUENCE_FINAL to work
-        }
-        cout<<"Transaction Inputs: "<<tx.vin.size();
+        tx.vin.resize(1); //CheckLockTimeVerify requires a nSequence to be present before it can check locktime
+        tx.vin[0].nSequence = 0; //Must also be not equal to SEQUENCE_FINAL to work
         EXPECT_TRUE(VerifyScript(scriptSig, scriptPubKey, tx, 0, true, true, SIGHASH_NONE)) << strTest;
     }
 }
@@ -175,6 +173,8 @@ TEST(script_tests, script_invalid)
 
         CTransaction tx;
         tx.nTime = CHECKLOCKTIME_SEQUENCE_VERIFY_SWITCH_TIME; //Force this transaction to use the LockTime verify
+        tx.vin.resize(1); //CheckLockTimeVerify requires a nSequence to be present before it can check locktime
+        tx.vin[0].nSequence = 0; //Must also be not equal to SEQUENCE_FINAL to work
         EXPECT_FALSE(VerifyScript(scriptSig, scriptPubKey, tx, 0, true, true, SIGHASH_NONE)) << strTest;
     }
 }
