@@ -331,6 +331,8 @@ bool CheckLockTime(const int64_t& nLockTime, const CTransaction &txTo, unsigned 
     // We want to compare apples to apples, so fail the script
     // unless the type of nLockTime being tested is the same as
     // the nLockTime in the transaction.
+    cout<<"Transaction Locktime:"<<txTo.nLockTime<<"\n";
+    cout<<"Script Locktime:"<<nLockTime<<"\n";
     if (!(
         (txTo.nLockTime <  LOCKTIME_THRESHOLD && nLockTime <  LOCKTIME_THRESHOLD) ||
         (txTo.nLockTime >= LOCKTIME_THRESHOLD && nLockTime >= LOCKTIME_THRESHOLD)
