@@ -146,6 +146,10 @@ TEST(script_tests, script_valid)
 
         CTransaction tx;
         tx.nTime = CHECKLOCKTIME_SEQUENCE_VERIFY_SWITCH_TIME; //Force this transaction to use the LockTime verify
+        for (unsigned int i = 0; i < tx.vin.size(); i++) {
+          tx.vin[i].nSequence = 0; //Must also be not equal to SEQUENCE_FINAL to work
+        }
+        cout<<"Transaction Inputs: "+tx.vin.size();
         EXPECT_TRUE(VerifyScript(scriptSig, scriptPubKey, tx, 0, true, true, SIGHASH_NONE)) << strTest;
     }
 }
