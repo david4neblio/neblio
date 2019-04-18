@@ -145,6 +145,7 @@ TEST(script_tests, script_valid)
         CScript scriptPubKey = ParseScript(scriptPubKeyString);
 
         CTransaction tx;
+        tx.nTime = CHECKLOCKTIME_SEQUENCE_VERIFY_SWITCH_TIME; //Force this transaction to use the LockTime verify
         EXPECT_TRUE(VerifyScript(scriptSig, scriptPubKey, tx, 0, true, true, SIGHASH_NONE)) << strTest;
     }
 }
@@ -169,6 +170,7 @@ TEST(script_tests, script_invalid)
         CScript scriptPubKey = ParseScript(scriptPubKeyString);
 
         CTransaction tx;
+        tx.nTime = CHECKLOCKTIME_SEQUENCE_VERIFY_SWITCH_TIME; //Force this transaction to use the LockTime verify
         EXPECT_FALSE(VerifyScript(scriptSig, scriptPubKey, tx, 0, true, true, SIGHASH_NONE)) << strTest;
     }
 }
