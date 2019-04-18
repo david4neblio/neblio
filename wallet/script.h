@@ -23,6 +23,26 @@ class CTransaction;
 
 static const unsigned int MAX_SCRIPT_ELEMENT_SIZE = 520; // bytes
 
+// Setting nSequence to this value for every input in a transaction
+// disables nLockTime.
+static const uint32_t SEQUENCE_FINAL = 0xffffffff;
+
+// If this flag set, CTxIn::nSequence is NOT interpreted as a
+// relative lock-time.
+static const uint32_t SEQUENCE_LOCKTIME_DISABLE_FLAG = 0x80000000;
+
+// If CTxIn::nSequence encodes a relative lock-time and this flag
+// is set, the relative lock-time has units of 512 seconds,
+// otherwise it specifies blocks with a granularity of 1.
+static const uint32_t SEQUENCE_LOCKTIME_TYPE_FLAG = 0x00400000;
+
+// If CTxIn::nSequence encodes a relative lock-time, this mask is
+// applied to extract that lock-time from the sequence field.
+static const uint32_t SEQUENCE_LOCKTIME_MASK = 0x0000ffff;
+
+//A timestamp in the blockchain where LOCKTIME and SEQUENCE Verify Activate
+static const unsigned int CHECKLOCKTIME_SEQUENCE_VERIFY_SWITCH_TIME = 1556668800; // Wednesday, May 1, 2019 00:00:00 AM UTC
+
 /** Signature hash types/flags */
 enum
 {
