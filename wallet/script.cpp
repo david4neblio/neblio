@@ -331,22 +331,16 @@ bool CheckLockTime(const int64_t& nLockTime, const CTransaction &txTo, unsigned 
     // We want to compare apples to apples, so fail the script
     // unless the type of nLockTime being tested is the same as
     // the nLockTime in the transaction.
-    cout<<"Transaction Locktime:"<<txTo.nLockTime<<"\n";
-    cout<<"Script Locktime:"<<nLockTime<<"\n";
     if (!(
         (txTo.nLockTime <  LOCKTIME_THRESHOLD && nLockTime <  LOCKTIME_THRESHOLD) ||
         (txTo.nLockTime >= LOCKTIME_THRESHOLD && nLockTime >= LOCKTIME_THRESHOLD)
     ))
         return false;
-    
-    cout<<"Passed initial locktime check\n";
 
     // Now that we know we're comparing apples-to-apples, the
     // comparison is a simple numeric one.
     if (nLockTime > (int64_t)txTo.nLockTime)
         return false;
-    
-    cout<<"Transaction locktime is less than script locktime\n";
 
     // Finally the nLockTime feature can be disabled and thus
     // CHECKLOCKTIMEVERIFY bypassed if every txin has been
@@ -360,8 +354,6 @@ bool CheckLockTime(const int64_t& nLockTime, const CTransaction &txTo, unsigned 
     // required to prove correct CHECKLOCKTIMEVERIFY execution.
     if (SEQUENCE_FINAL == txTo.vin[nIn].nSequence)
         return false;
-    
-    cout<<"Sequence ok\n";
 
     return true;
 }
@@ -553,7 +545,6 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
  
                 case OP_CHECKLOCKTIMEVERIFY:
                 {
-                    cout<<"Checking TimeLock\n";
                     // CHECKLOCKTIMEVERIFY
                     //
                     // (nLockTime -- nLockTime)
@@ -561,7 +552,6 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                         // treat as a NOP2 if not enabled yet by timestamp
                         break;
                     }
-                    cout<<"Timelock check operational\n";
 
                     if (stack.size() < 1)
                         return false;
@@ -573,8 +563,6 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                     // 0 MAX CHECKLOCKTIMEVERIFY.
                     if (nLockTime < 0)
                         return false;
-                    
-                    cout<<"Locktime is positive\n";
 
                     // Actually compare the specified lock time with the transaction.
                     if (!CheckLockTime(nLockTime.getuint64(), txTo, nIn))
