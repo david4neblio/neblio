@@ -548,7 +548,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                     // CHECKLOCKTIMEVERIFY
                     //
                     // (nLockTime -- nLockTime)
-                    if (txTo.nTime < CHECKLOCKTIME_SEQUENCE_VERIFY_SWITCH_TIME){
+                    if (txTo.nTime < CHECKLOCKTIME_VERIFY_SWITCH_TIME){
                         // treat as a NOP2 if not enabled yet by timestamp
                         break;
                     }
@@ -573,10 +573,9 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
 
                 case OP_CHECKSEQUENCEVERIFY:
                 {
-                    if (txTo.nTime < CHECKLOCKTIME_SEQUENCE_VERIFY_SWITCH_TIME){
-                        // treat as a NOP3 if not enabled yet by timestamp
-                        break;
-                    }
+                    // Not implemented
+                    // treat as a NOP3 for now as BIP68 is not implemented in Neblio, including Lightning Network
+                    break;
 
                     if (stack.size() < 1)
                         return false;
