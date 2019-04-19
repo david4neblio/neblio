@@ -41,7 +41,7 @@ static const uint32_t SEQUENCE_LOCKTIME_TYPE_FLAG = 0x00400000;
 static const uint32_t SEQUENCE_LOCKTIME_MASK = 0x0000ffff;
 
 //A timestamp in the blockchain where LOCKTIME and SEQUENCE Verify Activate
-static const unsigned int CHECKLOCKTIME_SEQUENCE_VERIFY_SWITCH_TIME = 1556668800; // Wednesday, May 1, 2019 00:00:00 AM UTC
+static const unsigned int CHECKLOCKTIME_VERIFY_SWITCH_TIME = 1556668800; // Wednesday, May 1, 2019 00:00:00 AM UTC
 
 /** Signature hash types/flags */
 enum
