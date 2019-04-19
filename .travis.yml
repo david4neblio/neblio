@@ -56,3 +56,6 @@ after_script:
 - echo "Done"
 before_deploy:
 - cd $TRAVIS_BUILD_DIR
+branches:
+  only:
+  - master
