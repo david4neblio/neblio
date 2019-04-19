@@ -3,7 +3,7 @@
 # Open Source Repository for Neblio Nodes & Wallets
 More information here: https://nebl.io
 
-Includes changes to make Neblio include OP_CHECKLOCKTIMEVERIFY
+Includes changes to make Neblio include OP_CHECKLOCKTIMEVERIFY and OP_CHECKSEQUENCEVERIFY (not activated due to no BIP68 implementation)
 
 Alpha Builds for commits that pass testing can be found here:
 https://neblio-build-staging.ams3.digitaloceanspaces.com/index.html
