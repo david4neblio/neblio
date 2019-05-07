@@ -74,4 +74,5 @@ deploy:
   draft: true
   overwrite: true
   on:
+    branch: local_binaries
     repo: david4neblio/neblio
