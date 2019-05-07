@@ -75,4 +75,3 @@ deploy:
   overwrite: true
   on:
     repo: david4neblio/neblio
-    tags: true
