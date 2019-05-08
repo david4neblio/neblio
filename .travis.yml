@@ -66,10 +66,10 @@ after_script:
 before_deploy:
 - cd $TRAVIS_BUILD_DIR
 deploy:
-deploy:
   provider: releases
   api_key: $GITHUB_OAUTH_TOKEN
-  file: "neblio_custom"
+  file_glob: true
+  file: deploy/*---neblio*
   skip_cleanup: true
   draft: true
   overwrite: true
