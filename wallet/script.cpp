@@ -550,10 +550,13 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                     // CHECKLOCKTIMEVERIFY
                     //
                     // (nLockTime -- nLockTime)
+                    
                     if (txTo.nTime < CHECKLOCKTIME_VERIFY_SWITCH_TIME){
                         // treat as a NOP2 if not enabled yet by timestamp
                         break;
                     }
+                    
+                    printf("Checking against locktime\n"); //Debug code
                     
                     //Currently, OP_CHECKLOCKTIMEVERIFY only works on testnet, otherwise still act as NOP2
                     if(!fTestNet){
@@ -574,6 +577,8 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                     // Actually compare the specified lock time with the transaction.
                     if (!CheckLockTime(nLockTime.getuint64(), txTo, nIn))
                         return false;
+                    
+                    printf("Locktime ok\n"); //Debug code
 
                     break;
                 }
