@@ -1842,10 +1842,14 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
     vector<vector<unsigned char> > stack, stackCopy;
     if (!EvalScript(stack, scriptSig, txTo, nIn, fStrictEncodings, nHashType))
         return false;
+    printf("Get items into the stack ok"); //Debug code
+    
     if (fValidatePayToScriptHash)
         stackCopy = stack;
     if (!EvalScript(stack, scriptPubKey, txTo, nIn, fStrictEncodings, nHashType))
         return false;
+    
+    printf("Stack items verify to scriptpubkey ok"); //Debug code
     if (stack.empty())
         return false;
 
@@ -1855,6 +1859,7 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
     // Additional validation for spend-to-script-hash transactions:
     if (scriptPubKey.IsPayToScriptHash())
     {
+        printf("Trying to read scriptsig"); //Debug code
         if (!scriptSig.IsPushOnly()) // scriptSig must be literals-only
             return false;            // or validation fails
 
@@ -1864,6 +1869,8 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
 
         if (!EvalScript(stackCopy, pubKey2, txTo, nIn, fStrictEncodings, nHashType))
             return false;
+        printf("Stack verifies with RedeemScript"); //Debug code
+        
         if (stackCopy.empty())
             return false;
         return CastToBool(stackCopy.back());
@@ -1929,6 +1936,8 @@ bool VerifySignature(const CTransaction& txFrom, const CTransaction& txTo, unsig
 
     if (txin.prevout.hash != txFrom.GetHash())
         return false;
+    
+    printf("Planning to verify signature\n"); //Debug code
 
     return VerifyScript(txin.scriptSig, txout.scriptPubKey, txTo, nIn, fValidatePayToScriptHash, fStrictEncodings, nHashType);
 }
