@@ -1842,14 +1842,14 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
     vector<vector<unsigned char> > stack, stackCopy;
     if (!EvalScript(stack, scriptSig, txTo, nIn, fStrictEncodings, nHashType))
         return false;
-    printf("Get items into the stack ok"); //Debug code
+    printf("Get items into the stack ok\n"); //Debug code
     
     if (fValidatePayToScriptHash)
         stackCopy = stack;
     if (!EvalScript(stack, scriptPubKey, txTo, nIn, fStrictEncodings, nHashType))
         return false;
     
-    printf("Stack items verify to scriptpubkey ok"); //Debug code
+    printf("Stack items verify to scriptpubkey ok\n"); //Debug code
     if (stack.empty())
         return false;
 
@@ -1859,17 +1859,21 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
     // Additional validation for spend-to-script-hash transactions:
     if (scriptPubKey.IsPayToScriptHash())
     {
-        printf("Trying to read scriptsig"); //Debug code
+        printf("Trying to read scriptsig\n"); //Debug code
         if (!scriptSig.IsPushOnly()) // scriptSig must be literals-only
             return false;            // or validation fails
 
         const valtype& pubKeySerialized = stackCopy.back();
         CScript pubKey2(pubKeySerialized.begin(), pubKeySerialized.end());
         popstack(stackCopy);
+        
+        printf("Push Only scriptsig confirmed\n"); //Debug code
 
-        if (!EvalScript(stackCopy, pubKey2, txTo, nIn, fStrictEncodings, nHashType))
+        if (!EvalScript(stackCopy, pubKey2, txTo, nIn, fStrictEncodings, nHashType)){
+            printf("Redeemscript failed to verify\n"); //Debug code
             return false;
-        printf("Stack verifies with RedeemScript"); //Debug code
+        }
+        printf("Stack verifies with RedeemScript\n"); //Debug code
         
         if (stackCopy.empty())
             return false;
