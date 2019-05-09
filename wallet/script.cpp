@@ -331,13 +331,13 @@ bool CheckLockTime(const int64_t& nLockTime, const CTransaction &txTo, unsigned 
     // We want to compare apples to apples, so fail the script
     // unless the type of nLockTime being tested is the same as
     // the nLockTime in the transaction.
+    printf("Transaction Locktime $d\n",(int64_t)txTo.nLockTime); //Debug code
+    
     if (!(
         (txTo.nLockTime <  LOCKTIME_THRESHOLD && nLockTime <  LOCKTIME_THRESHOLD) ||
         (txTo.nLockTime >= LOCKTIME_THRESHOLD && nLockTime >= LOCKTIME_THRESHOLD)
     ))
         return false;
-    
-    printf("Transaction Locktime $d\n",(int64_t)txTo.nLockTime); //Debug code
 
     // Now that we know we're comparing apples-to-apples, the
     // comparison is a simple numeric one.
@@ -576,7 +576,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
 
                     CBigNum nLockTime = CastToBigNum(stacktop(-1));
                     
-                    printf("RedeemScript Locktime $s\n",nLockTime.ToString().c_str()); //Debug code
+                    printf("RedeemScript Locktime %s\n",nLockTime.ToString().c_str()); //Debug code
 
                     // In the rare event that the argument may be < 0 due to
                     // some arithmetic being done first, you can always use
