@@ -1567,13 +1567,16 @@ bool CTransaction::ConnectInputs(CTxDB& /*txdb*/, MapPrevTx inputs, map<uint256,
                     // only during transition phase for P2SH: do not invoke anti-DoS code for
                     // potentially old clients relaying bad P2SH transactions
                     if(fBlock == false && fMiner == false){
-                        printf("Signature ok\n"); //Debug code
-                    }                    
+                        printf("Signature not ok\n"); //Debug code
+                    }
+                    
+                    //This crashes on my client with a bad scriptsig
                     if (fStrictPayToScriptHash && VerifySignature(txPrev, *this, i, false, false, 0))
                         return error("ConnectInputs() : %s P2SH VerifySignature failed",
                                      GetHash().ToString().c_str());
+                    
                     if(fBlock == false && fMiner == false){
-                        printf("Scripthash signature verified\n"); //Debug code
+                        printf("Scripthash signature not ok\n"); //Debug code
                     }                    
 
                     return DoS(100, error("ConnectInputs() : %s VerifySignature failed",
