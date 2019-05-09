@@ -1559,13 +1559,22 @@ bool CTransaction::ConnectInputs(CTxDB& /*txdb*/, MapPrevTx inputs, map<uint256,
             // still computed and checked, and any change will be caught at the next checkpoint.
             if (!(fBlock && (nBestHeight < Checkpoints::GetTotalBlocksEstimate()))) {
                 // Verify signature
+                if(fBlock == false && fMiner == false){
+                    printf("Verifying signature\n"); //Debug code
+                }
                 bool fStrictPayToScriptHash = true;
                 if (!VerifySignature(txPrev, *this, i, fStrictPayToScriptHash, false, 0)) {
                     // only during transition phase for P2SH: do not invoke anti-DoS code for
                     // potentially old clients relaying bad P2SH transactions
+                    if(fBlock == false && fMiner == false){
+                        printf("Signature ok\n"); //Debug code
+                    }                    
                     if (fStrictPayToScriptHash && VerifySignature(txPrev, *this, i, false, false, 0))
                         return error("ConnectInputs() : %s P2SH VerifySignature failed",
                                      GetHash().ToString().c_str());
+                    if(fBlock == false && fMiner == false){
+                        printf("Scripthash signature verified\n"); //Debug code
+                    }                    
 
                     return DoS(100, error("ConnectInputs() : %s VerifySignature failed",
                                           GetHash().ToString().c_str()));
