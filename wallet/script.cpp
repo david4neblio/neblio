@@ -336,11 +336,15 @@ bool CheckLockTime(const int64_t& nLockTime, const CTransaction &txTo, unsigned 
         (txTo.nLockTime >= LOCKTIME_THRESHOLD && nLockTime >= LOCKTIME_THRESHOLD)
     ))
         return false;
+    
+    printf("Transaction Locktime $d\n",(int64_t)txTo.nLockTime); //Debug code
 
     // Now that we know we're comparing apples-to-apples, the
     // comparison is a simple numeric one.
     if (nLockTime > (int64_t)txTo.nLockTime)
         return false;
+    
+    printf("LockTime was ok"); //Debug code
 
     // Finally the nLockTime feature can be disabled and thus
     // CHECKLOCKTIMEVERIFY bypassed if every txin has been
@@ -354,6 +358,8 @@ bool CheckLockTime(const int64_t& nLockTime, const CTransaction &txTo, unsigned 
     // required to prove correct CHECKLOCKTIMEVERIFY execution.
     if (SEQUENCE_FINAL == txTo.vin[nIn].nSequence)
         return false;
+    
+    printf("nSequence was ok"); //Debug code
 
     return true;
 }
@@ -565,8 +571,12 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
 
                     if (stack.size() < 1)
                         return false;
+                    
+                    printf("Stack size greater than 0\n"); //Debug code
 
                     CBigNum nLockTime = CastToBigNum(stacktop(-1));
+                    
+                    printf("RedeemScript Locktime $s\n",nLockTime.ToString().c_str()); //Debug code
 
                     // In the rare event that the argument may be < 0 due to
                     // some arithmetic being done first, you can always use
