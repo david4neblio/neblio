@@ -331,7 +331,7 @@ bool CheckLockTime(const int64_t& nLockTime, const CTransaction &txTo, unsigned 
     // We want to compare apples to apples, so fail the script
     // unless the type of nLockTime being tested is the same as
     // the nLockTime in the transaction.
-    printf("Transaction Locktime $d\n",(int64_t)txTo.nLockTime); //Debug code
+    printf("Transaction Locktime %d\n",(int64_t)txTo.nLockTime); //Debug code
     
     if (!(
         (txTo.nLockTime <  LOCKTIME_THRESHOLD && nLockTime <  LOCKTIME_THRESHOLD) ||
