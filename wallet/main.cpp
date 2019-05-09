@@ -754,6 +754,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CTransaction& tx, bool* pfMissingInput
         // This mitigates 'penny-flooding' -- sending thousands of free transactions just to
         // be annoying or make others' transactions take longer to confirm.
         if (nFees < MIN_RELAY_TX_FEE) {
+            printf("Transaction below minimum fee\n"); //Debug code
             static CCriticalSection cs;
             static double           dFreeCount;
             static int64_t          nLastTime;
@@ -772,6 +773,8 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CTransaction& tx, bool* pfMissingInput
                     printf("Rate limit dFreeCount: %g => %g\n", dFreeCount, dFreeCount + nSize);
                 dFreeCount += nSize;
             }
+        }else{
+            printf("Transaction fees acceptable\n"); //Debug code
         }
 
         // Check against previous transactions
