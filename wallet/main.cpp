@@ -671,11 +671,15 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CTransaction& tx, bool* pfMissingInput
     string reason;
     if (!fTestNet && !IsStandardTx(tx, reason))
         return error("AcceptToMemoryPool : nonstandard transaction: %s", reason.c_str());
+    
+    printf("Processing Transaction: %s\n",hash.ToString().c_str()); //Debug code
 
     // is it already in the memory pool?
     uint256 hash = tx.GetHash();
     if (pool.exists(hash))
         return false;
+    
+    printf("New transaction\n"); //Debug code
 
     // Check for conflicts with in-memory transactions
     CTransaction* ptxOld = NULL;
@@ -685,6 +689,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CTransaction& tx, bool* pfMissingInput
             COutPoint outpoint = tx.vin[i].prevout;
             if (pool.mapNextTx.count(outpoint)) {
                 // Disable replacement feature for now
+                printf("Transaction using same unspent output as another unconfirmed transaction\n"); //Debug code
                 return false;
 
                 // Allow replacing with a newer version of the same transaction
@@ -724,10 +729,14 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CTransaction& tx, bool* pfMissingInput
                 *pfMissingInputs = true;
             return false;
         }
+        
+        printf("Transaction inputs exists\n"); //Debug code
 
         // Check for non-standard pay-to-script-hash in inputs
         if (!tx.AreInputsStandard(mapInputs) && !fTestNet)
             return error("AcceptToMemoryPool : nonstandard transaction input");
+        
+        printf("Transaction inputs are standard\n"); //Debug code
 
         // Note: if you modify this code to accept non-standard transactions, then
         // you should add code here to check that the transaction does a
@@ -772,6 +781,8 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CTransaction& tx, bool* pfMissingInput
             return error("AcceptToMemoryPool : ConnectInputs failed %s",
                          hash.ToString().substr(0, 10).c_str());
         }
+        
+        printf("Transaction inputs connected\n"); //Debug code
 
         if (PassedFirstValidNTP1Tx(nBestHeight, fTestNet) &&
             GetNetForks().isForkActivated(NetworkFork::NETFORK__3_TACHYON)) {
@@ -797,6 +808,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CTransaction& tx, bool* pfMissingInput
                 return false;
             }
         }
+        printf("Transaction passed all checks\n"); //Debug code
     }
 
     // Store transaction in memory
