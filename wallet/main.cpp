@@ -672,13 +672,12 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CTransaction& tx, bool* pfMissingInput
     if (!fTestNet && !IsStandardTx(tx, reason))
         return error("AcceptToMemoryPool : nonstandard transaction: %s", reason.c_str());
     
-    printf("Processing Transaction: %s\n",hash.ToString().c_str()); //Debug code
-
     // is it already in the memory pool?
     uint256 hash = tx.GetHash();
+    printf("Processing Transaction: %s\n",hash.ToString().c_str()); //Debug code
     if (pool.exists(hash))
         return false;
-    
+
     printf("New transaction\n"); //Debug code
 
     // Check for conflicts with in-memory transactions
