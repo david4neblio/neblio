@@ -674,11 +674,8 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CTransaction& tx, bool* pfMissingInput
     
     // is it already in the memory pool?
     uint256 hash = tx.GetHash();
-    printf("Processing Transaction: %s\n",hash.ToString().c_str()); //Debug code
     if (pool.exists(hash))
         return false;
-
-    printf("New transaction\n"); //Debug code
 
     // Check for conflicts with in-memory transactions
     CTransaction* ptxOld = NULL;
@@ -688,7 +685,6 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CTransaction& tx, bool* pfMissingInput
             COutPoint outpoint = tx.vin[i].prevout;
             if (pool.mapNextTx.count(outpoint)) {
                 // Disable replacement feature for now
-                printf("Transaction using same unspent output as another unconfirmed transaction\n"); //Debug code
                 return false;
 
                 // Allow replacing with a newer version of the same transaction
@@ -728,14 +724,10 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CTransaction& tx, bool* pfMissingInput
                 *pfMissingInputs = true;
             return false;
         }
-        
-        printf("Transaction inputs exists\n"); //Debug code
 
         // Check for non-standard pay-to-script-hash in inputs
         if (!tx.AreInputsStandard(mapInputs) && !fTestNet)
             return error("AcceptToMemoryPool : nonstandard transaction input");
-        
-        printf("Transaction inputs are standard\n"); //Debug code
 
         // Note: if you modify this code to accept non-standard transactions, then
         // you should add code here to check that the transaction does a
@@ -754,7 +746,6 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CTransaction& tx, bool* pfMissingInput
         // This mitigates 'penny-flooding' -- sending thousands of free transactions just to
         // be annoying or make others' transactions take longer to confirm.
         if (nFees < MIN_RELAY_TX_FEE) {
-            printf("Transaction below minimum fee\n"); //Debug code
             static CCriticalSection cs;
             static double           dFreeCount;
             static int64_t          nLastTime;
@@ -773,8 +764,6 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CTransaction& tx, bool* pfMissingInput
                     printf("Rate limit dFreeCount: %g => %g\n", dFreeCount, dFreeCount + nSize);
                 dFreeCount += nSize;
             }
-        }else{
-            printf("Transaction fees acceptable\n"); //Debug code
         }
 
         // Check against previous transactions
@@ -783,8 +772,6 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CTransaction& tx, bool* pfMissingInput
             return error("AcceptToMemoryPool : ConnectInputs failed %s",
                          hash.ToString().substr(0, 10).c_str());
         }
-        
-        printf("Transaction inputs connected\n"); //Debug code
 
         if (PassedFirstValidNTP1Tx(nBestHeight, fTestNet) &&
             GetNetForks().isForkActivated(NetworkFork::NETFORK__3_TACHYON)) {
@@ -810,7 +797,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CTransaction& tx, bool* pfMissingInput
                 return false;
             }
         }
-        printf("Transaction passed all checks\n"); //Debug code
+
     }
 
     // Store transaction in memory
@@ -1466,9 +1453,6 @@ bool CTransaction::ConnectInputs(CTxDB& /*txdb*/, MapPrevTx inputs, map<uint256,
     // fBlock is true when this is called from AcceptBlock when a new best-block is added to the
     // blockchain fMiner is true when called from the internal bitcoin miner
     // ... both are false when called from CTransaction::AcceptToMemoryPool
-    if(fBlock == false && fMiner == false){
-        printf("Connecting transaction inputs\n"); //Debug code
-    }    
     
     if (!IsCoinBase()) {
         int64_t nValueIn = 0;
@@ -1478,10 +1462,6 @@ bool CTransaction::ConnectInputs(CTxDB& /*txdb*/, MapPrevTx inputs, map<uint256,
             assert(inputs.count(prevout.hash) > 0);
             CTxIndex&     txindex = inputs[prevout.hash].first;
             CTransaction& txPrev  = inputs[prevout.hash].second;
-            
-            if(fBlock == false && fMiner == false){
-                printf("Trying to connect input: %d\n",i); //Debug code
-            }
 
             if (prevout.n >= txPrev.vout.size() || prevout.n >= txindex.vSpent.size())
                 return DoS(100, error("ConnectInputs() : %s prevout.n out of range %d %" PRIszu
@@ -1489,10 +1469,6 @@ bool CTransaction::ConnectInputs(CTxDB& /*txdb*/, MapPrevTx inputs, map<uint256,
                                       GetHash().ToString().c_str(), prevout.n, txPrev.vout.size(),
                                       txindex.vSpent.size(), prevout.hash.ToString().c_str(),
                                       txPrev.ToString().c_str()));
-            
-            if(fBlock == false && fMiner == false){
-                printf("Inputs are not out of range\n"); //Debug code
-            }
 
             // If prev is coinbase or coinstake, check that it's matured
             int nCbM = CoinbaseMaturity();
@@ -1513,21 +1489,14 @@ bool CTransaction::ConnectInputs(CTxDB& /*txdb*/, MapPrevTx inputs, map<uint256,
             if (txPrev.nTime > nTime)
                 return DoS(
                     100,
-                    error("ConnectInputs() : transaction timestamp earlier than input transaction"));
-            
-            if(fBlock == false && fMiner == false){
-                printf("Transaction time is ok\n"); //Debug code
-            }            
+                    error("ConnectInputs() : transaction timestamp earlier than input transaction"));     
 
             // Check for negative or overflow input values
             nValueIn += txPrev.vout[prevout.n].nValue;
             if (!MoneyRange(txPrev.vout[prevout.n].nValue) || !MoneyRange(nValueIn))
                 return DoS(100, error("ConnectInputs() : txin values out of range"));
         }
-        
-        if(fBlock == false && fMiner == false){
-            printf("Inexpensive checks done\n"); //Debug code
-        }        
+   
         // The first loop above does all the inexpensive checks.
         // Only if ALL inputs pass do we perform expensive ECDSA signature checks.
         // Helps prevent CPU exhaustion attacks.
@@ -1535,11 +1504,7 @@ bool CTransaction::ConnectInputs(CTxDB& /*txdb*/, MapPrevTx inputs, map<uint256,
             COutPoint prevout = vin[i].prevout;
             assert(inputs.count(prevout.hash) > 0);
             CTxIndex&     txindex = inputs[prevout.hash].first;
-            CTransaction& txPrev  = inputs[prevout.hash].second;
-            
-            if(fBlock == false && fMiner == false){
-                printf("Trying to connect input: %d\n",i); //Debug code
-            }            
+            CTransaction& txPrev  = inputs[prevout.hash].second;       
 
             // Check for conflicts (double-spend)
             // This doesn't trigger the DoS code on purpose; if it did, it would make it easier
@@ -1548,45 +1513,27 @@ bool CTransaction::ConnectInputs(CTxDB& /*txdb*/, MapPrevTx inputs, map<uint256,
                 return fMiner ? false
                               : error("ConnectInputs() : %s prev tx already used at %s",
                                       GetHash().ToString().c_str(),
-                                      txindex.vSpent[prevout.n].ToString().c_str());
-            
-            if(fBlock == false && fMiner == false){
-                printf("No double spend detected\n"); //Debug code
-            }           
+                                      txindex.vSpent[prevout.n].ToString().c_str());          
 
             // Skip ECDSA signature verification when connecting blocks (fBlock=true)
             // before the last blockchain checkpoint. This is safe because block merkle hashes are
             // still computed and checked, and any change will be caught at the next checkpoint.
             if (!(fBlock && (nBestHeight < Checkpoints::GetTotalBlocksEstimate()))) {
                 // Verify signature
-                if(fBlock == false && fMiner == false){
-                    printf("Verifying signature\n"); //Debug code
-                }
                 bool fStrictPayToScriptHash = true;
                 if (!VerifySignature(txPrev, *this, i, fStrictPayToScriptHash, false, 0)) {
                     // only during transition phase for P2SH: do not invoke anti-DoS code for
                     // potentially old clients relaying bad P2SH transactions
-                    if(fBlock == false && fMiner == false){
-                        printf("Signature not ok\n"); //Debug code
-                    }
-                    
+
                     //This crashes on my client with a bad scriptsig
                     if (fStrictPayToScriptHash && VerifySignature(txPrev, *this, i, false, false, 0))
                         return error("ConnectInputs() : %s P2SH VerifySignature failed",
-                                     GetHash().ToString().c_str());
-                    
-                    if(fBlock == false && fMiner == false){
-                        printf("Scripthash signature not ok\n"); //Debug code
-                    }                    
+                                     GetHash().ToString().c_str());               
 
                     return DoS(100, error("ConnectInputs() : %s VerifySignature failed",
                                           GetHash().ToString().c_str()));
                 }
-            }
-            
-            if(fBlock == false && fMiner == false){
-                printf("Signature check ok\n"); //Debug code
-            }            
+            }    
 
             // Mark outpoints as spent
             txindex.vSpent[prevout.n] = posThisTx;
@@ -1619,10 +1566,7 @@ bool CTransaction::ConnectInputs(CTxDB& /*txdb*/, MapPrevTx inputs, map<uint256,
             if (!MoneyRange(nFees))
                 return DoS(100, error("ConnectInputs() : nFees out of range"));
         }
-        
-        if(fBlock == false && fMiner == false){
-            printf("Input is ok\n"); //Debug code
-        }        
+    
     }
 
     return true;
