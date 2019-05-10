@@ -165,7 +165,7 @@ TEST(transaction_tests, basic_transaction_tests)
 static std::vector<CTransaction> SetupDummyInputs(CBasicKeyStore& keystoreRet, MapPrevTx& inputsRet)
 {
     std::vector<CTransaction> dummyTransactions;
-    dummyTransactions.resize(2);
+    dummyTransactions.resize(3);
 
     // Add some keys to the keystore:
     CKey key[4];
@@ -188,6 +188,16 @@ static std::vector<CTransaction> SetupDummyInputs(CBasicKeyStore& keystoreRet, M
     dummyTransactions[1].vout[1].nValue = 22 * CENT;
     dummyTransactions[1].vout[1].scriptPubKey.SetDestination(key[3].GetPubKey().GetID());
     inputsRet[dummyTransactions[1].GetHash()] = make_pair(CTxIndex(), dummyTransactions[1]);
+    
+    // Add some additional dummy transactions to test flexibility of AreInputsStandard
+    // It is important to remember that AreInputsStandard doesn't actually evaluate the redeemScript itself
+    // but checks whether the format fits a preset template, in this case, less than 16 SigOps;
+    // however, it does check to verify that the scriptsig redeemscript hashes into the Scripthash from the previous output
+    dummyTransactions[2].vout.resize(1);
+    dummyTransactions[2].vout[0].nValue = 23 * CENT;
+    CScript redeemScript1 = ParseScript("0 PICK 20 EQUALVERIFY DEPTH 3 EQUAL");
+    dummyTransactions[2].vout[0].scriptPubKey = GetScriptForDestination(ScriptHash(redeemScript1));
+    inputsRet[dummyTransactions[2].GetHash()] = make_pair(CTxIndex(), dummyTransactions[2]);
 
     return dummyTransactions;
 }
@@ -223,6 +233,21 @@ TEST(transaction_tests, test_Get)
     // ... as should not having enough:
     t1.vin[0].scriptSig = CScript();
     EXPECT_TRUE(!t1.AreInputsStandard(dummyInputs));
+    
+    // Expanded this test to include ScriptHash scripts
+    // Keep in mind that AreInputsStandard is ran in conjunction with IsStandard (on MainNet)
+    // IsStandard prevents transactions that have non PushData scriptsigs and scriptsigs > 500 bytes
+    // Therefore we do not need to test non Pushdata scriptsigs or scriptsigs > 500 bytes
+    CTransaction t2;
+    t2.vout.resize(1);
+    t2.vout[0].nValue = 20 * CENT;
+    t2.vout[0].scriptPubKey << OP_1; 
+    
+    t2.vin.resize(1);
+    t2.vin[0].prevout.hash = dummyTransactions[2].GetHash();
+    t2.vin[0].prevout.n    = 0;    
+    t2.vin[0].scriptSig << ParseScript("22 21 20") << ToByteVector(ParseScript("0 PICK 20 EQUALVERIFY DEPTH 3 EQUAL"));
+    EXPECT_TRUE(t2.AreInputsStandard(dummyInputs));
 }
 
 TEST(transaction_tests, test_GetThrow)
