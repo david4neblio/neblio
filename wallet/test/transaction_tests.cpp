@@ -199,8 +199,7 @@ static std::vector<CTransaction> SetupDummyInputs(CBasicKeyStore& keystoreRet, M
     
     // Add some additional dummy transactions to test flexibility of AreInputsStandard
     // It is important to remember that AreInputsStandard doesn't actually evaluate the redeemScript itself
-    // but checks whether the format fits a preset template, in this case, less than 16 SigOps;
-    // however, it does check to verify that the scriptsig redeemscript hashes into the Scripthash from the previous output
+    // but checks whether the format fits a preset template, in this case, less than 16 SigOps
     CScript redeemScript;
     dummyTransactions[2].vout.resize(1);
     dummyTransactions[2].vout[0].nValue = 23 * CENT;
@@ -276,10 +275,6 @@ TEST(transaction_tests, test_Get)
     t2.vin[0].scriptSig = ParseScript("22 21"); // AreInputsStandard will still return true, as we do not evaluate in AreInputsStandard
     t2.vin[0].scriptSig << ToByteVector(ParseScript("0 PICK 20 EQUALVERIFY DEPTH 3 EQUAL")); // Push the redeemScript bytes
     EXPECT_TRUE(t2.AreInputsStandard(dummyInputs));
-    
-    t2.vin[0].scriptSig = ParseScript("22 21 20"); // While the script is true, AreInputsStandard will not be true as the scriptsig redeemscript doesn't hash into scriptpubkey scripthash
-    t2.vin[0].scriptSig << ToByteVector(ParseScript("1 PICK 21 EQUALVERIFY DEPTH 3 EQUAL")); // Push the redeemScript bytes
-    EXPECT_TRUE(!t2.AreInputsStandard(dummyInputs));
     
     t2.vin[0].prevout.hash = dummyTransactions[3].GetHash();
     t2.vin[0].scriptSig = ParseScript("1"); // Create a scriptsig that will make AreInputsStandard return false due to too many sig ops
