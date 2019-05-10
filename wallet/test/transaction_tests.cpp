@@ -209,6 +209,8 @@ std::vector<unsigned char> ToByteVector(const T& in)
     return std::vector<unsigned char>(in.begin(), in.end());
 }
 
+ScriptHash::ScriptHash(const CScript& in) : uint160(Hash160(in.begin(), in.end())) {}
+
 TEST(transaction_tests, test_Get)
 {
     CBasicKeyStore            keystore;
