@@ -202,6 +202,13 @@ static std::vector<CTransaction> SetupDummyInputs(CBasicKeyStore& keystoreRet, M
     return dummyTransactions;
 }
 
+// Function that allows us to convert CScript to bytearray (so it can be pushed into another CScript)
+template <typename T>
+std::vector<unsigned char> ToByteVector(const T& in)
+{
+    return std::vector<unsigned char>(in.begin(), in.end());
+}
+
 TEST(transaction_tests, test_Get)
 {
     CBasicKeyStore            keystore;
