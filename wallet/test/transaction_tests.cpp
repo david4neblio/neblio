@@ -7,6 +7,8 @@
 #include "main.h"
 #include "wallet.h"
 
+#include <vector>
+
 using namespace std;
 using namespace json_spirit;
 
