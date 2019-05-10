@@ -209,17 +209,17 @@ static std::vector<CTransaction> SetupDummyInputs(CBasicKeyStore& keystoreRet, M
     
     dummyTransactions[3].vout.resize(1);
     dummyTransactions[3].vout[0].nValue = 23 * CENT;
-    // Create scripthash with large number of Op Sigs (> 15)
-    redeemScript = ParseScript("CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG");
+    // Create scripthash with large number of sig ops but below limit (15 sig ops)
+    redeemScript = ParseScript("CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG");
     dummyTransactions[3].vout[0].scriptPubKey = GetScriptForDestination(redeemScript.GetID());
-    inputsRet[dummyTransactions[3].GetHash()] = make_pair(CTxIndex(), dummyTransactions[3]);
+    inputsRet[dummyTransactions[3].GetHash()] = make_pair(CTxIndex(), dummyTransactions[3]);       
     
     dummyTransactions[4].vout.resize(1);
     dummyTransactions[4].vout[0].nValue = 23 * CENT;
-    // Create scripthash with large number of Op Sigs but below limit (15 sig ops)
-    redeemScript = ParseScript("CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG");
+    // Create scripthash with too many sig ops ( > 15)
+    redeemScript = ParseScript("CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG");
     dummyTransactions[4].vout[0].scriptPubKey = GetScriptForDestination(redeemScript.GetID());
-    inputsRet[dummyTransactions[4].GetHash()] = make_pair(CTxIndex(), dummyTransactions[4]);      
+    inputsRet[dummyTransactions[4].GetHash()] = make_pair(CTxIndex(), dummyTransactions[4]);   
 
     return dummyTransactions;
 }
@@ -277,22 +277,20 @@ TEST(transaction_tests, test_Get)
     EXPECT_TRUE(t2.AreInputsStandard(dummyInputs));
     
     t2.vin[0].prevout.hash = dummyTransactions[3].GetHash();
-    t2.vin[0].scriptSig = ParseScript("1"); // Create a scriptsig that will make AreInputsStandard return false due to too many sig ops
-    t2.vin[0].scriptSig << ToByteVector(ParseScript("CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG")); // Push the redeemScript bytes
-    EXPECT_TRUE(!t2.AreInputsStandard(dummyInputs));
-    
-    t2.vin[0].prevout.hash = dummyTransactions[4].GetHash();
     t2.vin[0].scriptSig = ParseScript("1"); // Create a scriptsig that will be true as it is below limit of sig ops
     t2.vin[0].scriptSig << ToByteVector(ParseScript("CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG")); // Push the redeemScript bytes
     EXPECT_TRUE(t2.AreInputsStandard(dummyInputs));
 
-    // Create a scriptsig that be at exactly 500 bytes (limit set by IsStandardTx)
-    // AreInputsStandard will return true
+    // Create a scriptsig that be at exactly 500 bytes (limit set by IsStandardTx). AreInputsStandard will return true
     t2.vin[0].scriptSig = ParseScript("1 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz' DROP"); 
     t2.vin[0].scriptSig << ToByteVector(ParseScript("CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG")); // Push the redeemScript bytes
     EXPECT_EQ(t2.vin[0].scriptSig.size(),500); // Confirm that this is 500 bytes
-    EXPECT_TRUE(t2.AreInputsStandard(dummyInputs));    
-      
+    EXPECT_TRUE(t2.AreInputsStandard(dummyInputs));  
+    
+    t2.vin[0].prevout.hash = dummyTransactions[4].GetHash();
+    t2.vin[0].scriptSig = ParseScript("1"); // Create a scriptsig that will make AreInputsStandard return false due to too many sig ops
+    t2.vin[0].scriptSig << ToByteVector(ParseScript("CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG")); // Push the redeemScript bytes
+    EXPECT_TRUE(!t2.AreInputsStandard(dummyInputs));    
 }
 
 TEST(transaction_tests, test_GetThrow)
