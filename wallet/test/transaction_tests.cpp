@@ -170,16 +170,6 @@ std::vector<unsigned char> ToByteVector(const T& in)
     return std::vector<unsigned char>(in.begin(), in.end());
 }
 
-struct ScriptHash : public uint160
-{
-    ScriptHash() : uint160() {}
-    explicit ScriptHash(const uint160& hash) : uint160(hash) {}
-    explicit ScriptHash(const CScript& script);
-    using uint160::uint160;
-};
-
-ScriptHash::ScriptHash(const CScript& in) : uint160(Hash160(ToByteVector(in))) {}
-
 static std::vector<CTransaction> SetupDummyInputs(CBasicKeyStore& keystoreRet, MapPrevTx& inputsRet)
 {
     std::vector<CTransaction> dummyTransactions;
@@ -264,7 +254,8 @@ TEST(transaction_tests, test_Get)
     t2.vin.resize(1);
     t2.vin[0].prevout.hash = dummyTransactions[2].GetHash();
     t2.vin[0].prevout.n    = 0;    
-    t2.vin[0].scriptSig << ParseScript("22 21 20") << ToByteVector(ParseScript("0 PICK 20 EQUALVERIFY DEPTH 3 EQUAL"));
+    t2.vin[0].scriptSig = ParseScript("22 21 20"); // The scriptsig that will be true when combined with redeemScript
+    t2.vin[0].scriptSig << ToByteVector(ParseScript("0 PICK 20 EQUALVERIFY DEPTH 3 EQUAL")); // The redeemScript unhashed
     EXPECT_TRUE(t2.AreInputsStandard(dummyInputs));
 }
 
