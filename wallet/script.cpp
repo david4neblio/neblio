@@ -331,7 +331,6 @@ bool CheckLockTime(const int64_t& nLockTime, const CTransaction &txTo, unsigned 
     // We want to compare apples to apples, so fail the script
     // unless the type of nLockTime being tested is the same as
     // the nLockTime in the transaction.
-    printf("Transaction Locktime %d\n",(int64_t)txTo.nLockTime); //Debug code
     
     if (!(
         (txTo.nLockTime <  LOCKTIME_THRESHOLD && nLockTime <  LOCKTIME_THRESHOLD) ||
@@ -343,8 +342,6 @@ bool CheckLockTime(const int64_t& nLockTime, const CTransaction &txTo, unsigned 
     // comparison is a simple numeric one.
     if (nLockTime > (int64_t)txTo.nLockTime)
         return false;
-    
-    printf("LockTime was ok"); //Debug code
 
     // Finally the nLockTime feature can be disabled and thus
     // CHECKLOCKTIMEVERIFY bypassed if every txin has been
@@ -358,8 +355,6 @@ bool CheckLockTime(const int64_t& nLockTime, const CTransaction &txTo, unsigned 
     // required to prove correct CHECKLOCKTIMEVERIFY execution.
     if (SEQUENCE_FINAL == txTo.vin[nIn].nSequence)
         return false;
-    
-    printf("nSequence was ok"); //Debug code
 
     return true;
 }
@@ -562,8 +557,6 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                         break;
                     }
                     
-                    printf("Checking against locktime\n"); //Debug code
-                    
                     //Currently, OP_CHECKLOCKTIMEVERIFY only works on testnet, otherwise still act as NOP2
                     if(!fTestNet){
                         break;
@@ -571,12 +564,8 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
 
                     if (stack.size() < 1)
                         return false;
-                    
-                    printf("Stack size greater than 0\n"); //Debug code
 
                     CBigNum nLockTime = CastToBigNum(stacktop(-1));
-                    
-                    printf("RedeemScript Locktime %s\n",nLockTime.ToString().c_str()); //Debug code
 
                     // In the rare event that the argument may be < 0 due to
                     // some arithmetic being done first, you can always use
@@ -587,8 +576,6 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                     // Actually compare the specified lock time with the transaction.
                     if (!CheckLockTime(nLockTime.getuint64(), txTo, nIn))
                         return false;
-                    
-                    printf("Locktime ok\n"); //Debug code
 
                     break;
                 }
@@ -1857,14 +1844,12 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
     vector<vector<unsigned char> > stack, stackCopy;
     if (!EvalScript(stack, scriptSig, txTo, nIn, fStrictEncodings, nHashType))
         return false;
-    printf("Get items into the stack ok\n"); //Debug code
     
     if (fValidatePayToScriptHash)
         stackCopy = stack;
     if (!EvalScript(stack, scriptPubKey, txTo, nIn, fStrictEncodings, nHashType))
         return false;
     
-    printf("Stack items verify to scriptpubkey ok\n"); //Debug code
     if (stack.empty())
         return false;
 
@@ -1874,21 +1859,20 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
     // Additional validation for spend-to-script-hash transactions:
     if (scriptPubKey.IsPayToScriptHash())
     {
-        printf("Trying to read scriptsig\n"); //Debug code
+        
         if (!scriptSig.IsPushOnly()) // scriptSig must be literals-only
             return false;            // or validation fails
+        
+        if (stackCopy.empty())
+            return false;        
 
         const valtype& pubKeySerialized = stackCopy.back();
         CScript pubKey2(pubKeySerialized.begin(), pubKeySerialized.end());
         popstack(stackCopy);
-        
-        printf("Push Only scriptsig confirmed\n"); //Debug code
 
         if (!EvalScript(stackCopy, pubKey2, txTo, nIn, fStrictEncodings, nHashType)){
-            printf("Redeemscript failed to verify\n"); //Debug code
             return false;
         }
-        printf("Stack verifies with RedeemScript\n"); //Debug code
         
         if (stackCopy.empty())
             return false;
@@ -1955,8 +1939,6 @@ bool VerifySignature(const CTransaction& txFrom, const CTransaction& txTo, unsig
 
     if (txin.prevout.hash != txFrom.GetHash())
         return false;
-    
-    printf("Planning to verify signature\n"); //Debug code
 
     return VerifyScript(txin.scriptSig, txout.scriptPubKey, txTo, nIn, fValidatePayToScriptHash, fStrictEncodings, nHashType);
 }
