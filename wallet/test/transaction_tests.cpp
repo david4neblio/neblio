@@ -164,6 +164,24 @@ TEST(transaction_tests, basic_transaction_tests)
 // paid to a TX_PUBKEY, the second 21 and 22 CENT outputs
 // paid to a TX_PUBKEYHASH.
 //
+
+// Function that allows us to convert CScript to bytearray (so it can be pushed into another CScript)
+template <typename T>
+std::vector<unsigned char> ToByteVector(const T& in)
+{
+    return std::vector<unsigned char>(in.begin(), in.end());
+}
+
+struct ScriptHash : public uint160
+{
+    ScriptHash() : uint160() {}
+    explicit ScriptHash(const uint160& hash) : uint160(hash) {}
+    explicit ScriptHash(const CScript& script);
+    using uint160::uint160;
+};
+
+ScriptHash::ScriptHash(const CScript& in) : uint160(Hash160(ToByteVector(in))) {}
+
 static std::vector<CTransaction> SetupDummyInputs(CBasicKeyStore& keystoreRet, MapPrevTx& inputsRet)
 {
     std::vector<CTransaction> dummyTransactions;
@@ -203,23 +221,6 @@ static std::vector<CTransaction> SetupDummyInputs(CBasicKeyStore& keystoreRet, M
 
     return dummyTransactions;
 }
-
-// Function that allows us to convert CScript to bytearray (so it can be pushed into another CScript)
-template <typename T>
-std::vector<unsigned char> ToByteVector(const T& in)
-{
-    return std::vector<unsigned char>(in.begin(), in.end());
-}
-
-struct ScriptHash : public uint160
-{
-    ScriptHash() : uint160() {}
-    explicit ScriptHash(const uint160& hash) : uint160(hash) {}
-    explicit ScriptHash(const CScript& script);
-    using uint160::uint160;
-};
-
-ScriptHash::ScriptHash(const CScript& in) : uint160(Hash160(in.begin(), in.end())) {}
 
 TEST(transaction_tests, test_Get)
 {
