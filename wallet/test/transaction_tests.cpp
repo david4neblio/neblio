@@ -214,7 +214,7 @@ static std::vector<CTransaction> SetupDummyInputs(CBasicKeyStore& keystoreRet, M
     dummyTransactions[2].vout.resize(1);
     dummyTransactions[2].vout[0].nValue = 23 * CENT;
     CScript redeemScript1 = ParseScript("0 PICK 20 EQUALVERIFY DEPTH 3 EQUAL");
-    dummyTransactions[2].vout[0].scriptPubKey = GetScriptForDestination(ScriptHash(redeemScript1));
+    dummyTransactions[2].vout[0].scriptPubKey = GetScriptForDestination(redeemScript1.GetID());
     inputsRet[dummyTransactions[2].GetHash()] = make_pair(CTxIndex(), dummyTransactions[2]);
 
     return dummyTransactions;
