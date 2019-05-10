@@ -173,7 +173,7 @@ std::vector<unsigned char> ToByteVector(const T& in)
 static std::vector<CTransaction> SetupDummyInputs(CBasicKeyStore& keystoreRet, MapPrevTx& inputsRet)
 {
     std::vector<CTransaction> dummyTransactions;
-    dummyTransactions.resize(3);
+    dummyTransactions.resize(5);
 
     // Add some keys to the keystore:
     CKey key[4];
@@ -201,11 +201,26 @@ static std::vector<CTransaction> SetupDummyInputs(CBasicKeyStore& keystoreRet, M
     // It is important to remember that AreInputsStandard doesn't actually evaluate the redeemScript itself
     // but checks whether the format fits a preset template, in this case, less than 16 SigOps;
     // however, it does check to verify that the scriptsig redeemscript hashes into the Scripthash from the previous output
+    CScript redeemScript;
     dummyTransactions[2].vout.resize(1);
     dummyTransactions[2].vout[0].nValue = 23 * CENT;
-    CScript redeemScript1 = ParseScript("0 PICK 20 EQUALVERIFY DEPTH 3 EQUAL");
-    dummyTransactions[2].vout[0].scriptPubKey = GetScriptForDestination(redeemScript1.GetID());
+    redeemScript = ParseScript("0 PICK 20 EQUALVERIFY DEPTH 3 EQUAL");
+    dummyTransactions[2].vout[0].scriptPubKey = GetScriptForDestination(redeemScript.GetID());
     inputsRet[dummyTransactions[2].GetHash()] = make_pair(CTxIndex(), dummyTransactions[2]);
+    
+    dummyTransactions[3].vout.resize(1);
+    dummyTransactions[3].vout[0].nValue = 23 * CENT;
+    // Create scripthash with large number of Op Sigs (> 15)
+    redeemScript = ParseScript("CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG");
+    dummyTransactions[3].vout[0].scriptPubKey = GetScriptForDestination(redeemScript.GetID());
+    inputsRet[dummyTransactions[3].GetHash()] = make_pair(CTxIndex(), dummyTransactions[3]);
+    
+    dummyTransactions[4].vout.resize(1);
+    dummyTransactions[4].vout[0].nValue = 23 * CENT;
+    // Create scripthash with large number of Op Sigs but below limit (15 sig ops)
+    redeemScript = ParseScript("CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG");
+    dummyTransactions[4].vout[0].scriptPubKey = GetScriptForDestination(redeemScript.GetID());
+    inputsRet[dummyTransactions[4].GetHash()] = make_pair(CTxIndex(), dummyTransactions[4]);      
 
     return dummyTransactions;
 }
@@ -243,8 +258,8 @@ TEST(transaction_tests, test_Get)
     EXPECT_TRUE(!t1.AreInputsStandard(dummyInputs));
     
     // Expanded this test to include ScriptHash scripts
-    // Keep in mind that AreInputsStandard is ran in conjunction with IsStandard (on MainNet)
-    // IsStandard prevents transactions that have non PushData scriptsigs and scriptsigs > 500 bytes
+    // Keep in mind that AreInputsStandard is ran in conjunction with IsStandardTx (on MainNet)
+    // IsStandardTx prevents transactions that have non PushData scriptsigs and scriptsigs > 500 bytes
     // Therefore we do not need to test non Pushdata scriptsigs or scriptsigs > 500 bytes
     CTransaction t2;
     t2.vout.resize(1);
@@ -254,9 +269,35 @@ TEST(transaction_tests, test_Get)
     t2.vin.resize(1);
     t2.vin[0].prevout.hash = dummyTransactions[2].GetHash();
     t2.vin[0].prevout.n    = 0;    
-    t2.vin[0].scriptSig = ParseScript("22 21 20"); // The scriptsig that will be true when combined with redeemScript
-    t2.vin[0].scriptSig << ToByteVector(ParseScript("0 PICK 20 EQUALVERIFY DEPTH 3 EQUAL")); // The redeemScript unhashed
+    t2.vin[0].scriptSig = ParseScript("22 21 20"); // AreInputsStandard will return true and the script sig is true when combined with redeemScript
+    t2.vin[0].scriptSig << ToByteVector(ParseScript("0 PICK 20 EQUALVERIFY DEPTH 3 EQUAL")); // Push the redeemScript bytes
     EXPECT_TRUE(t2.AreInputsStandard(dummyInputs));
+    
+    t2.vin[0].scriptSig = ParseScript("22 21"); // AreInputsStandard will still return true, as we do not evaluate in AreInputsStandard
+    t2.vin[0].scriptSig << ToByteVector(ParseScript("0 PICK 20 EQUALVERIFY DEPTH 3 EQUAL")); // Push the redeemScript bytes
+    EXPECT_TRUE(t2.AreInputsStandard(dummyInputs));
+    
+    t2.vin[0].scriptSig = ParseScript("22 21 20"); // While the script is true, AreInputsStandard will not be true as the scriptsig redeemscript doesn't hash into scriptpubkey scripthash
+    t2.vin[0].scriptSig << ToByteVector(ParseScript("1 PICK 21 EQUALVERIFY DEPTH 3 EQUAL")); // Push the redeemScript bytes
+    EXPECT_TRUE(!t2.AreInputsStandard(dummyInputs));
+    
+    t2.vin[0].prevout.hash = dummyTransactions[3].GetHash();
+    t2.vin[0].scriptSig = ParseScript("1"); // Create a scriptsig that will make AreInputsStandard return false due to too many sig ops
+    t2.vin[0].scriptSig << ToByteVector(ParseScript("CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG")); // Push the redeemScript bytes
+    EXPECT_TRUE(!t2.AreInputsStandard(dummyInputs));
+    
+    t2.vin[0].prevout.hash = dummyTransactions[4].GetHash();
+    t2.vin[0].scriptSig = ParseScript("1"); // Create a scriptsig that will be true as it is below limit of sig ops
+    t2.vin[0].scriptSig << ToByteVector(ParseScript("CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG")); // Push the redeemScript bytes
+    EXPECT_TRUE(t2.AreInputsStandard(dummyInputs));
+
+    // Create a scriptsig that be at exactly 500 bytes (limit set by IsStandardTx)
+    // AreInputsStandard will return true
+    t2.vin[0].scriptSig = ParseScript("1 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz' DROP"); 
+    t2.vin[0].scriptSig << ToByteVector(ParseScript("CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG CHECKSIG")); // Push the redeemScript bytes
+    EXPECT_EQ(t2.vin[0].scriptSig.size(),500); // Confirm that this is 500 bytes
+    EXPECT_TRUE(t2.AreInputsStandard(dummyInputs));    
+      
 }
 
 TEST(transaction_tests, test_GetThrow)
